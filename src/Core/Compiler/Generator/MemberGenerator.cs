@@ -10,18 +10,20 @@ using ScriptSharp;
 using ScriptSharp.ScriptModel;
 using System.Linq;
 
-namespace ScriptSharp.Generator {
-
-    internal static class MemberGenerator {
-
-        private static void GenerateEvent(ScriptGenerator generator, string typeName, EventSymbol eventSymbol) {
+namespace ScriptSharp.Generator
+{
+    internal static class MemberGenerator
+    {
+        private static void GenerateEvent(ScriptGenerator generator, string typeName, EventSymbol eventSymbol)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             ParameterSymbol valueParameter = eventSymbol.Parameters[0];
 
             string eventName = eventSymbol.GeneratedName;
             string fieldName = eventName;
-            if (eventSymbol.DefaultImplementation) {
+            if (eventSymbol.DefaultImplementation)
+            {
                 fieldName = "__" + Utility.CreateCamelCaseName(eventSymbol.Name);
 
                 Debug.Assert(eventSymbol.Parent.Type == SymbolType.Class);
@@ -33,16 +35,19 @@ namespace ScriptSharp.Generator {
             }
 
             string fieldReference;
-            if ((eventSymbol.Visibility & MemberVisibility.Static) == 0) {
+            if ((eventSymbol.Visibility & MemberVisibility.Static) == 0)
+            {
                 fieldReference = "this.";
             }
-            else {
+            else
+            {
                 fieldReference = typeName + ".";
             }
             fieldReference += fieldName;
 
             bool instanceMember = true;
-            if ((eventSymbol.Visibility & MemberVisibility.Static) != 0) {
+            if ((eventSymbol.Visibility & MemberVisibility.Static) != 0)
+            {
                 instanceMember = false;
                 writer.Write(typeName);
                 writer.Write(".");
@@ -50,23 +55,27 @@ namespace ScriptSharp.Generator {
 
             writer.Write("add_");
             writer.Write(eventName);
-            if (instanceMember) {
+            if (instanceMember)
+            {
                 writer.Write(": ");
             }
-            else {
+            else
+            {
                 writer.Write(" = ");
             }
 
             writer.Write("function(");
             writer.Write(valueParameter.GeneratedName);
             writer.WriteLine(") {");
-            writer.Indent++;
+            writer.IncrementIndent();
 
-            if (generator.Options.EnableDocComments) {
+            if (generator.Options.EnableDocComments)
+            {
                 DocCommentGenerator.GenerateComment(generator, eventSymbol);
             }
 
-            if (eventSymbol.DefaultImplementation) {
+            if (eventSymbol.DefaultImplementation)
+            {
                 writer.Write(fieldReference);
                 writer.Write(" = ss.bindAdd(");
                 writer.Write(fieldReference);
@@ -74,41 +83,49 @@ namespace ScriptSharp.Generator {
                 writer.Write(valueParameter.GeneratedName);
                 writer.WriteLine(");");
             }
-            else {
+            else
+            {
                 CodeGenerator.GenerateScript(generator, eventSymbol, /* add */ true);
             }
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.Write("}");
 
-            if (instanceMember == false) {
+            if (instanceMember == false)
+            {
                 writer.WriteLine(";");
             }
 
-            if (instanceMember) {
+            if (instanceMember)
+            {
                 writer.WriteLine(",");
             }
-            else {
+            else
+            {
                 writer.Write(typeName);
                 writer.Write(".");
             }
             writer.Write("remove_");
             writer.Write(eventName);
-            if (instanceMember) {
+            if (instanceMember)
+            {
                 writer.Write(": ");
             }
-            else {
+            else
+            {
                 writer.Write(" = ");
             }
             writer.Write("function(");
             writer.Write(valueParameter.GeneratedName);
             writer.WriteLine(") {");
-            writer.Indent++;
+            writer.IncrementIndent();
 
-            if (generator.Options.EnableDocComments) {
+            if (generator.Options.EnableDocComments)
+            {
                 DocCommentGenerator.GenerateComment(generator, eventSymbol);
             }
 
-            if (eventSymbol.DefaultImplementation) {
+            if (eventSymbol.DefaultImplementation)
+            {
                 writer.Write(fieldReference);
                 writer.Write(" = ss.bindSub(");
                 writer.Write(fieldReference);
@@ -116,13 +133,15 @@ namespace ScriptSharp.Generator {
                 writer.Write(valueParameter.GeneratedName);
                 writer.WriteLine(");");
             }
-            else {
+            else
+            {
                 CodeGenerator.GenerateScript(generator, eventSymbol, /* add */ false);
             }
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.Write("}");
 
-            if (instanceMember == false) {
+            if (instanceMember == false)
+            {
                 writer.WriteLine(";");
             }
         }
@@ -132,28 +151,34 @@ namespace ScriptSharp.Generator {
             ScriptTextWriter writer = generator.Writer;
 
             bool instanceMember = true;
-            if ((fieldSymbol.Visibility & MemberVisibility.Static) != 0) {
+            if ((fieldSymbol.Visibility & MemberVisibility.Static) != 0)
+            {
                 instanceMember = false;
                 writer.Write(typeName);
                 writer.Write(".");
             }
 
             writer.Write(fieldSymbol.GeneratedName);
-            if (instanceMember) {
+            if (instanceMember)
+            {
                 writer.Write(": ");
             }
-            else {
+            else
+            {
                 writer.Write(" = ");
             }
             CodeGenerator.GenerateScript(generator, fieldSymbol);
 
-            if (instanceMember == false) {
+            if (instanceMember == false)
+            {
                 writer.WriteLine(";");
             }
         }
 
-        private static void GenerateIndexer(ScriptGenerator generator, string typeName, PropertySymbol indexerSymbol) {
-            if (indexerSymbol.IsAbstract) {
+        private static void GenerateIndexer(ScriptGenerator generator, string typeName, PropertySymbol indexerSymbol)
+        {
+            if (indexerSymbol.IsAbstract)
+            {
                 return;
             }
 
@@ -165,42 +190,49 @@ namespace ScriptSharp.Generator {
             writer.Write(indexerSymbol.GeneratedName);
             writer.Write(": function(");
 
-            for (int i = 0; i < indexerSymbol.Parameters.Count - 1; i++) {
+            for (int i = 0; i < indexerSymbol.Parameters.Count - 1; i++)
+            {
                 ParameterSymbol parameterSymbol = indexerSymbol.Parameters[i];
-                if (i > 0) {
+                if (i > 0)
+                {
                     writer.Write(", ");
                 }
                 writer.Write(parameterSymbol.GeneratedName);
             }
 
             writer.WriteLine(") {");
-            writer.Indent++;
+            writer.IncrementIndent();
 
-            if (generator.Options.EnableDocComments) {
+            if (generator.Options.EnableDocComments)
+            {
                 DocCommentGenerator.GenerateComment(generator, indexerSymbol);
             }
 
             CodeGenerator.GenerateScript(generator, (IndexerSymbol)indexerSymbol, /* getter */ true);
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.Write("}");
 
-            if (indexerSymbol.IsReadOnly == false) {
+            if (indexerSymbol.IsReadOnly == false)
+            {
                 writer.WriteLine(",");
 
                 writer.Write("set_");
                 writer.Write(indexerSymbol.GeneratedName);
                 writer.Write(": function(");
-                for (int i = 0; i < indexerSymbol.Parameters.Count; i++) {
+                for (int i = 0; i < indexerSymbol.Parameters.Count; i++)
+                {
                     ParameterSymbol parameterSymbol = indexerSymbol.Parameters[i];
-                    if (i > 0) {
+                    if (i > 0)
+                    {
                         writer.Write(", ");
                     }
                     writer.Write(parameterSymbol.GeneratedName);
                 }
                 writer.WriteLine(") {");
-                writer.Indent++;
+                writer.IncrementIndent();
 
-                if (generator.Options.EnableDocComments) {
+                if (generator.Options.EnableDocComments)
+                {
                     DocCommentGenerator.GenerateComment(generator, indexerSymbol);
                 }
 
@@ -208,32 +240,39 @@ namespace ScriptSharp.Generator {
                 writer.Write("return ");
                 writer.Write(indexerSymbol.Parameters[indexerSymbol.Parameters.Count - 1].GeneratedName);
                 writer.WriteLine(";");
-                writer.Indent--;
+                writer.DecrementIndent();
                 writer.Write("}");
             }
         }
 
-        private static void GenerateMethod(ScriptGenerator generator, string typeName, MethodSymbol methodSymbol) {
-            if (methodSymbol.IsAbstract) {
+        private static void GenerateMethod(ScriptGenerator generator, string typeName, MethodSymbol methodSymbol)
+        {
+            if (methodSymbol.IsAbstract)
+            {
                 return;
             }
 
             ScriptTextWriter writer = generator.Writer;
 
             bool instanceMember = ((methodSymbol.Visibility & MemberVisibility.Static) == 0);
-            if (instanceMember == false) {
-                if (methodSymbol.IsExtension) {
+            if (instanceMember == false)
+            {
+                if (methodSymbol.IsExtension)
+                {
                     string extendee = null;
-                    if (methodSymbol.Parent.Type == SymbolType.Class) {
+                    if (methodSymbol.Parent.Type == SymbolType.Class)
+                    {
                         extendee = ((ClassSymbol)methodSymbol.Parent).Extendee;
                     }
-                    if (String.IsNullOrEmpty(extendee)) {
+                    if (String.IsNullOrEmpty(extendee))
+                    {
                         extendee = "this";
                     }
 
                     writer.Write(extendee);
                 }
-                else {
+                else
+                {
                     writer.Write(typeName);
                 }
 
@@ -241,45 +280,53 @@ namespace ScriptSharp.Generator {
             }
 
             writer.Write(methodSymbol.GeneratedName);
-            if (instanceMember) {
+            if (instanceMember)
+            {
                 writer.Write(": ");
             }
-            else {
+            else
+            {
                 writer.Write(" = ");
             }
 
             bool hasParams = HasParamsModifier(methodSymbol);
 
-            if (hasParams) {
+            if (hasParams)
+            {
                 writer.Write("ss.paramsGenerator(");
                 writer.Write("{0}, ", methodSymbol.Parameters.Count - 1);
             }
 
             writer.Write("function(");
             WriteParameters(methodSymbol, writer);
-           
-            writer.WriteLine(") {");
-            writer.Indent++;
 
-            if (generator.Options.EnableDocComments) {
+            writer.WriteLine(") {");
+            writer.IncrementIndent();
+
+            if (generator.Options.EnableDocComments)
+            {
                 DocCommentGenerator.GenerateComment(generator, methodSymbol);
             }
 
             CodeGenerator.GenerateScript(generator, methodSymbol);
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.Write("}");
 
-            if (hasParams) {
+            if (hasParams)
+            {
                 writer.Write(")");
             }
 
-            if (instanceMember == false) {
+            if (instanceMember == false)
+            {
                 writer.WriteLine(";");
             }
         }
 
-        private static bool HasParamsModifier(MethodSymbol methodSymbol) {
-            if (methodSymbol == null || methodSymbol.Parameters == null || methodSymbol.Parameters.Count() == 0) {
+        private static bool HasParamsModifier(MethodSymbol methodSymbol)
+        {
+            if (methodSymbol == null || methodSymbol.Parameters == null || methodSymbol.Parameters.Count() == 0)
+            {
                 return false;
             }
 
@@ -287,12 +334,16 @@ namespace ScriptSharp.Generator {
             return lastParameterParseContext.Flags.HasFlag(CodeModel.ParameterFlags.Params);
         }
 
-        private static void WriteParameters(MethodSymbol methodSymbol, ScriptTextWriter writer) {
-            if (methodSymbol.Parameters != null) {
+        private static void WriteParameters(MethodSymbol methodSymbol, ScriptTextWriter writer)
+        {
+            if (methodSymbol.Parameters != null)
+            {
                 int paramIndex = 0;
 
-                foreach (ParameterSymbol parameterSymbol in methodSymbol.Parameters) {
-                    if (paramIndex > 0){
+                foreach (ParameterSymbol parameterSymbol in methodSymbol.Parameters)
+                {
+                    if (paramIndex > 0)
+                    {
                         writer.Write(", ");
                     }
                     writer.Write(parameterSymbol.GeneratedName);
@@ -302,15 +353,18 @@ namespace ScriptSharp.Generator {
             }
         }
 
-        private static void GenerateProperty(ScriptGenerator generator, string typeName, PropertySymbol propertySymbol) {
-            if (propertySymbol.IsAbstract) {
+        private static void GenerateProperty(ScriptGenerator generator, string typeName, PropertySymbol propertySymbol)
+        {
+            if (propertySymbol.IsAbstract)
+            {
                 return;
             }
 
             ScriptTextWriter writer = generator.Writer;
 
             bool instanceMember = true;
-            if ((propertySymbol.Visibility & MemberVisibility.Static) != 0) {
+            if ((propertySymbol.Visibility & MemberVisibility.Static) != 0)
+            {
                 instanceMember = false;
                 writer.Write(typeName);
                 writer.Write(".");
@@ -318,51 +372,61 @@ namespace ScriptSharp.Generator {
 
             writer.Write("get_");
             writer.Write(propertySymbol.GeneratedName);
-            if (instanceMember) {
+            if (instanceMember)
+            {
                 writer.Write(": ");
             }
-            else {
+            else
+            {
                 writer.Write(" = ");
             }
             writer.WriteLine("function() {");
-            writer.Indent++;
+            writer.IncrementIndent();
 
-            if (generator.Options.EnableDocComments) {
+            if (generator.Options.EnableDocComments)
+            {
                 DocCommentGenerator.GenerateComment(generator, propertySymbol);
             }
 
             CodeGenerator.GenerateScript(generator, propertySymbol, /* getter */ true);
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.Write("}");
 
-            if (instanceMember == false) {
+            if (instanceMember == false)
+            {
                 writer.WriteLine(";");
             }
 
-            if (propertySymbol.IsReadOnly == false) {
+            if (propertySymbol.IsReadOnly == false)
+            {
                 ParameterSymbol valueParameter = propertySymbol.Parameters[0];
-                if (instanceMember) {
+                if (instanceMember)
+                {
                     writer.WriteLine(",");
                 }
-                else {
+                else
+                {
                     writer.Write(typeName);
                     writer.Write(".");
                 }
 
                 writer.Write("set_");
                 writer.Write(propertySymbol.GeneratedName);
-                if (instanceMember) {
+                if (instanceMember)
+                {
                     writer.Write(": ");
                 }
-                else {
+                else
+                {
                     writer.Write(" = ");
                 }
                 writer.Write("function(");
                 writer.Write(valueParameter.GeneratedName);
                 writer.WriteLine(") {");
-                writer.Indent++;
+                writer.IncrementIndent();
 
-                if (generator.Options.EnableDocComments) {
+                if (generator.Options.EnableDocComments)
+                {
                     DocCommentGenerator.GenerateComment(generator, propertySymbol);
                 }
 
@@ -371,22 +435,25 @@ namespace ScriptSharp.Generator {
                 writer.Write(valueParameter.GeneratedName);
                 writer.Write(";");
                 writer.WriteLine();
-                writer.Indent--;
+                writer.DecrementIndent();
                 writer.Write("}");
 
-                if (instanceMember == false) {
+                if (instanceMember == false)
+                {
                     writer.WriteLine(";");
                 }
             }
         }
 
-        public static void GenerateScript(ScriptGenerator generator, MemberSymbol memberSymbol) {
+        public static void GenerateScript(ScriptGenerator generator, MemberSymbol memberSymbol)
+        {
             Debug.Assert(memberSymbol.Parent is TypeSymbol);
             TypeSymbol typeSymbol = (TypeSymbol)memberSymbol.Parent;
 
             string typeName = typeSymbol.FullGeneratedName;
 
-            switch (memberSymbol.Type) {
+            switch (memberSymbol.Type)
+            {
                 case SymbolType.Field:
                     GenerateField(generator, typeName, (FieldSymbol)memberSymbol);
                     break;

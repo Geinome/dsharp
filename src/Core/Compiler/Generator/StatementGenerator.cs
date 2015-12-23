@@ -8,31 +8,36 @@ using System.Diagnostics;
 using ScriptSharp;
 using ScriptSharp.ScriptModel;
 
-namespace ScriptSharp.Generator {
-
-    internal static class StatementGenerator {
-
-        private static void GenerateBlockStatement(ScriptGenerator generator, MemberSymbol symbol, BlockStatement statement) {
+namespace ScriptSharp.Generator
+{
+    internal static class StatementGenerator
+    {
+        private static void GenerateBlockStatement(ScriptGenerator generator, MemberSymbol symbol, BlockStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
-            foreach (Statement s in statement.Statements) {
+            foreach (Statement s in statement.Statements)
+            {
                 GenerateStatement(generator, symbol, s);
             }
         }
 
-        private static void GenerateBreakStatement(ScriptGenerator generator, MemberSymbol symbol, BreakStatement statement) {
+        private static void GenerateBreakStatement(ScriptGenerator generator, MemberSymbol symbol, BreakStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
             writer.Write("break;");
             writer.WriteLine();
         }
 
-        private static void GenerateContinueStatement(ScriptGenerator generator, MemberSymbol symbol, ContinueStatement statement) {
+        private static void GenerateContinueStatement(ScriptGenerator generator, MemberSymbol symbol, ContinueStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
             writer.Write("continue;");
             writer.WriteLine();
         }
 
-        private static void GenerateErrorStatement(ScriptGenerator generator, MemberSymbol symbol, ErrorStatement statement) {
+        private static void GenerateErrorStatement(ScriptGenerator generator, MemberSymbol symbol, ErrorStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
             writer.Write("// ERROR: ");
             writer.Write(statement.Message);
@@ -42,18 +47,22 @@ namespace ScriptSharp.Generator {
             writer.WriteLine();
         }
 
-        private static void GenerateExpressionStatement(ScriptGenerator generator, MemberSymbol symbol, ExpressionStatement statement) {
+        private static void GenerateExpressionStatement(ScriptGenerator generator, MemberSymbol symbol, ExpressionStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             ExpressionGenerator.GenerateExpression(generator, symbol, statement.Expression);
-            if (statement.IsFragment == false) {
+            if (statement.IsFragment == false)
+            {
                 writer.Write(";");
                 writer.WriteLine();
             }
         }
 
-        private static void GenerateForStatement(ScriptGenerator generator, MemberSymbol symbol, ForStatement statement) {
-            if (statement.Body == null) {
+        private static void GenerateForStatement(ScriptGenerator generator, MemberSymbol symbol, ForStatement statement)
+        {
+            if (statement.Body == null)
+            {
                 return;
             }
 
@@ -61,33 +70,40 @@ namespace ScriptSharp.Generator {
 
             writer.Write("for ");
             writer.Write("(");
-            if (statement.Initializers != null) {
+            if (statement.Initializers != null)
+            {
                 ExpressionGenerator.GenerateExpressionList(generator, symbol, statement.Initializers);
             }
-            else if (statement.Variables != null) {
+            else if (statement.Variables != null)
+            {
                 GenerateVariableDeclarations(generator, symbol, statement.Variables);
             }
             writer.Write("; ");
-            if (statement.Condition != null) {
+            if (statement.Condition != null)
+            {
                 ExpressionGenerator.GenerateExpression(generator, symbol, statement.Condition);
             }
             writer.Write("; ");
-            if (statement.Increments != null) {
+            if (statement.Increments != null)
+            {
                 ExpressionGenerator.GenerateExpressionList(generator, symbol, statement.Increments);
             }
             writer.WriteLine(") {");
-            writer.Indent++;
+            writer.IncrementIndent();
             GenerateStatement(generator, symbol, statement.Body);
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.Write("}");
             writer.WriteLine();
         }
 
-        private static void GenerateForInStatement(ScriptGenerator generator, MemberSymbol symbol, ForInStatement statement) {
+        private static void GenerateForInStatement(ScriptGenerator generator, MemberSymbol symbol, ForInStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
-            if (statement.IsDictionaryEnumeration) {
-                if (statement.DictionaryVariable != null) {
+            if (statement.IsDictionaryEnumeration)
+            {
+                if (statement.DictionaryVariable != null)
+                {
                     writer.Write("var ");
                     writer.Write(statement.DictionaryVariable.GeneratedName);
                     writer.Write(" = ");
@@ -99,33 +115,38 @@ namespace ScriptSharp.Generator {
                 writer.Write("for (var ");
                 writer.Write(statement.LoopVariable.GeneratedName);
                 writer.Write(" in ");
-                if (statement.DictionaryVariable != null) {
+                if (statement.DictionaryVariable != null)
+                {
                     writer.Write(statement.DictionaryVariable.GeneratedName);
                 }
-                else {
+                else
+                {
                     ExpressionGenerator.GenerateExpression(generator, symbol, statement.CollectionExpression);
                 }
                 writer.WriteLine(") {");
-                writer.Indent++;
+                writer.IncrementIndent();
                 writer.Write("var ");
                 writer.Write(statement.ItemVariable.GeneratedName);
                 writer.Write(" = { key: ");
                 writer.Write(statement.LoopVariable.GeneratedName);
                 writer.Write(", value: ");
-                if (statement.DictionaryVariable != null) {
+                if (statement.DictionaryVariable != null)
+                {
                     writer.Write(statement.DictionaryVariable.GeneratedName);
                 }
-                else {
+                else
+                {
                     ExpressionGenerator.GenerateExpression(generator, symbol, statement.CollectionExpression);
                 }
                 writer.Write("[");
                 writer.Write(statement.LoopVariable.GeneratedName);
                 writer.WriteLine("] };");
                 GenerateStatement(generator, symbol, statement.Body);
-                writer.Indent--;
+                writer.DecrementIndent();
                 writer.WriteLine("}");
             }
-            else {
+            else
+            {
                 writer.Write("var ");
                 writer.Write(statement.LoopVariable.GeneratedName);
                 writer.Write(" = ");
@@ -139,7 +160,7 @@ namespace ScriptSharp.Generator {
                 writer.Write("while (");
                 writer.Write(statement.LoopVariable.GeneratedName);
                 writer.WriteLine(".moveNext()) {");
-                writer.Indent++;
+                writer.IncrementIndent();
 
                 writer.Write("var ");
                 writer.Write(statement.ItemVariable.GeneratedName);
@@ -150,14 +171,16 @@ namespace ScriptSharp.Generator {
 
                 GenerateStatement(generator, symbol, statement.Body);
 
-                writer.Indent--;
+                writer.DecrementIndent();
                 writer.Write("}");
                 writer.WriteLine();
             }
         }
 
-        private static void GenerateIfElseStatement(ScriptGenerator generator, MemberSymbol symbol, IfElseStatement statement) {
-            if ((statement.IfStatement == null) && (statement.ElseStatement == null)) {
+        private static void GenerateIfElseStatement(ScriptGenerator generator, MemberSymbol symbol, IfElseStatement statement)
+        {
+            if ((statement.IfStatement == null) && (statement.ElseStatement == null))
+            {
                 return;
             }
 
@@ -166,47 +189,57 @@ namespace ScriptSharp.Generator {
             writer.Write("if (");
             ExpressionGenerator.GenerateExpression(generator, symbol, statement.Condition);
             writer.WriteLine(") {");
-            if (statement.IfStatement != null) {
-                writer.Indent++;
+            if (statement.IfStatement != null)
+            {
+                writer.IncrementIndent();
                 GenerateStatement(generator, symbol, statement.IfStatement);
-                writer.Indent--;
+                writer.DecrementIndent();
             }
             writer.Write("}");
             writer.WriteLine();
-            if (statement.ElseStatement != null) {
+            if (statement.ElseStatement != null)
+            {
                 bool writeEndBlock = false;
 
-                if (statement.ElseStatement is IfElseStatement) {
+                if (statement.ElseStatement is IfElseStatement)
+                {
                     writer.Write("else ");
                 }
-                else {
+                else
+                {
                     writer.WriteLine("else {");
                     writeEndBlock = true;
-                    writer.Indent++;
+                    writer.IncrementIndent();
                 }
                 GenerateStatement(generator, symbol, statement.ElseStatement);
-                if (writeEndBlock) {
-                    writer.Indent--;
+                if (writeEndBlock)
+                {
+                    writer.DecrementIndent();
                     writer.WriteLine("}");
                 }
             }
         }
 
-        private static void GenerateReturnStatement(ScriptGenerator generator, MemberSymbol symbol, ReturnStatement statement) {
+        private static void GenerateReturnStatement(ScriptGenerator generator, MemberSymbol symbol, ReturnStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
-            if (statement.Value != null) {
+            if (statement.Value != null)
+            {
                 writer.Write("return ");
                 ExpressionGenerator.GenerateExpression(generator, symbol, statement.Value);
                 writer.WriteLine(";");
             }
-            else {
+            else
+            {
                 writer.WriteLine("return;");
             }
         }
 
-        public static void GenerateStatement(ScriptGenerator generator, MemberSymbol symbol, Statement statement) {
-            switch (statement.Type) {
+        public static void GenerateStatement(ScriptGenerator generator, MemberSymbol symbol, Statement statement)
+        {
+            switch (statement.Type)
+            {
                 case StatementType.Block:
                     GenerateBlockStatement(generator, symbol, (BlockStatement)statement);
                     break;
@@ -257,37 +290,44 @@ namespace ScriptSharp.Generator {
             }
         }
 
-        private static void GenerateSwitchStatement(ScriptGenerator generator, MemberSymbol symbol, SwitchStatement statement) {
+        private static void GenerateSwitchStatement(ScriptGenerator generator, MemberSymbol symbol, SwitchStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             writer.Write("switch (");
             ExpressionGenerator.GenerateExpression(generator, symbol, statement.Condition);
             writer.WriteLine(") {");
-            writer.Indent++;
-            foreach (SwitchGroup group in statement.Groups) {
-                if (group.Cases != null) {
-                    foreach (Expression caseExpression in group.Cases) {
+            writer.IncrementIndent();
+            foreach (SwitchGroup group in statement.Groups)
+            {
+                if (group.Cases != null)
+                {
+                    foreach (Expression caseExpression in group.Cases)
+                    {
                         writer.Write("case ");
                         ExpressionGenerator.GenerateExpression(generator, symbol, caseExpression);
                         writer.WriteLine(":");
                     }
                 }
 
-                if (group.IncludeDefault) {
+                if (group.IncludeDefault)
+                {
                     writer.WriteLine("default:");
                 }
 
-                writer.Indent++;
-                foreach (Statement childStatement in group.Statements) {
+                writer.IncrementIndent();
+                foreach (Statement childStatement in group.Statements)
+                {
                     GenerateStatement(generator, symbol, childStatement);
                 }
-                writer.Indent--;
+                writer.DecrementIndent();
             }
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.WriteLine("}");
         }
 
-        private static void GenerateThrowStatement(ScriptGenerator generator, MemberSymbol symbol, ThrowStatement statement) {
+        private static void GenerateThrowStatement(ScriptGenerator generator, MemberSymbol symbol, ThrowStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             writer.Write("throw ");
@@ -295,46 +335,53 @@ namespace ScriptSharp.Generator {
             writer.WriteLine(";");
         }
 
-        private static void GenerateTryCatchFinallyStatement(ScriptGenerator generator, MemberSymbol symbol, TryCatchFinallyStatement statement) {
+        private static void GenerateTryCatchFinallyStatement(ScriptGenerator generator, MemberSymbol symbol, TryCatchFinallyStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             writer.WriteLine("try {");
-            writer.Indent++;
+            writer.IncrementIndent();
             GenerateStatement(generator, symbol, statement.Body);
-            writer.Indent--;
+            writer.DecrementIndent();
             writer.WriteLine("}");
-            if (statement.Catch != null) {
+            if (statement.Catch != null)
+            {
                 writer.Write("catch (");
                 writer.Write(statement.ExceptionVariable.GeneratedName);
                 writer.WriteLine(") {");
-                writer.Indent++;
+                writer.IncrementIndent();
                 GenerateStatement(generator, symbol, statement.Catch);
-                writer.Indent--;
+                writer.DecrementIndent();
                 writer.WriteLine("}");
             }
-            if (statement.Finally != null) {
+            if (statement.Finally != null)
+            {
                 writer.WriteLine("finally {");
-                writer.Indent++;
+                writer.IncrementIndent();
                 GenerateStatement(generator, symbol, statement.Finally);
-                writer.Indent--;
+                writer.DecrementIndent();
                 writer.WriteLine("}");
             }
         }
 
-        private static void GenerateVariableDeclarations(ScriptGenerator generator, MemberSymbol symbol, VariableDeclarationStatement statement) {
+        private static void GenerateVariableDeclarations(ScriptGenerator generator, MemberSymbol symbol, VariableDeclarationStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             bool firstVariable = true;
 
             writer.Write("var ");
-            foreach (VariableSymbol variableSymbol in statement.Variables) {
-                if (firstVariable == false) {
+            foreach (VariableSymbol variableSymbol in statement.Variables)
+            {
+                if (firstVariable == false)
+                {
                     writer.Write(", ");
                 }
 
                 writer.Write(variableSymbol.GeneratedName);
 
-                if (variableSymbol.Value != null) {
+                if (variableSymbol.Value != null)
+                {
                     writer.Write(" = ");
                     ExpressionGenerator.GenerateExpression(generator, symbol, variableSymbol.Value);
                 }
@@ -343,37 +390,44 @@ namespace ScriptSharp.Generator {
             }
         }
 
-        private static void GenerateVariableDeclarationStatement(ScriptGenerator generator, MemberSymbol symbol, VariableDeclarationStatement statement) {
+        private static void GenerateVariableDeclarationStatement(ScriptGenerator generator, MemberSymbol symbol, VariableDeclarationStatement statement)
+        {
             ScriptTextWriter writer = generator.Writer;
 
             GenerateVariableDeclarations(generator, symbol, statement);
             writer.WriteLine(";");
         }
 
-        private static void GenerateWhileStatement(ScriptGenerator generator, MemberSymbol symbol, WhileStatement statement) {
-            if (statement.Body == null) {
+        private static void GenerateWhileStatement(ScriptGenerator generator, MemberSymbol symbol, WhileStatement statement)
+        {
+            if (statement.Body == null)
+            {
                 return;
             }
 
             ScriptTextWriter writer = generator.Writer;
 
-            if (statement.PreCondition) {
+            if (statement.PreCondition)
+            {
                 writer.Write("while (");
                 ExpressionGenerator.GenerateExpression(generator, symbol, statement.Condition);
                 writer.WriteLine(") {");
             }
-            else {
+            else
+            {
                 writer.WriteLine("do {");
             }
 
-            writer.Indent++;
+            writer.IncrementIndent();
             GenerateStatement(generator, symbol, statement.Body);
-            writer.Indent--;
+            writer.DecrementIndent();
 
-            if (statement.PreCondition) {
+            if (statement.PreCondition)
+            {
                 writer.WriteLine("}");
             }
-            else {
+            else
+            {
                 writer.Write("} while (");
                 ExpressionGenerator.GenerateExpression(generator, symbol, statement.Condition);
                 writer.WriteLine(");");

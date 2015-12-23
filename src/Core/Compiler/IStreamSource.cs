@@ -6,17 +6,13 @@
 using System;
 using System.IO;
 
-namespace ScriptSharp {
+namespace ScriptSharp
+{
+    public interface IStreamSource
+    {
+        string FullName { get; }
 
-    public interface IStreamSource {
-
-        string FullName {
-            get;
-        }
-
-        string Name {
-            get;
-        }
+        string Name { get; }
 
         void CloseStream(Stream stream);
 

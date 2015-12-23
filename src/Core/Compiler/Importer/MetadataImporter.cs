@@ -35,7 +35,32 @@ namespace ScriptSharp.Importer {
             _errorHandler = errorHandler;
         }
 
-        private ICollection<TypeSymbol> ImportAssemblies(MetadataSource mdSource) {
+        public ICollection<TypeSymbol> ImportMetadata(ICollection<string> references, SymbolSet symbols)
+        {
+            Debug.Assert(references != null);
+            Debug.Assert(symbols != null);
+
+            _symbols = symbols;
+
+            MetadataSource mdSource = new MetadataSource();
+            bool hasLoadErrors = mdSource.LoadReferences(references, _errorHandler);
+
+            ICollection<TypeSymbol> importedTypes = null;
+            if (hasLoadErrors == false)
+            {
+                importedTypes = ImportAssemblies(mdSource);
+            }
+
+            if (_resolveError)
+            {
+                return null;
+            }
+
+            return importedTypes;
+        }
+
+        private ICollection<TypeSymbol> ImportAssemblies(MetadataSource mdSource)
+        {
             _importedTypes = new List<TypeSymbol>();
 
             ImportScriptAssembly(mdSource, mdSource.CoreAssemblyPath, /* coreAssembly */ true);
@@ -307,27 +332,6 @@ namespace ScriptSharp.Importer {
                     Debug.Fail("Unknown symbol type.");
                     break;
             }
-        }
-
-        public ICollection<TypeSymbol> ImportMetadata(ICollection<string> references, SymbolSet symbols) {
-            Debug.Assert(references != null);
-            Debug.Assert(symbols != null);
-
-            _symbols = symbols;
-
-            MetadataSource mdSource = new MetadataSource();
-            bool hasLoadErrors = mdSource.LoadReferences(references, _errorHandler);
-
-            ICollection<TypeSymbol> importedTypes = null;
-            if (hasLoadErrors == false) {
-                importedTypes = ImportAssemblies(mdSource);
-            }
-
-            if (_resolveError) {
-                return null;
-            }
-
-            return importedTypes;
         }
 
         private void ImportMethods(TypeSymbol typeSymbol) {
@@ -745,7 +749,6 @@ namespace ScriptSharp.Importer {
 
             return typeSymbol;
         }
-
 
         private enum PseudoClassMembers {
 

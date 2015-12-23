@@ -13,10 +13,10 @@ using System.Text;
 using ScriptSharp;
 using ScriptSharp.Importer.IL;
 
-namespace ScriptSharp.Importer {
-
-    internal sealed class MetadataSource {
-
+namespace ScriptSharp.Importer
+{
+    internal sealed class MetadataSource
+    {
         private static readonly string CoreAssemblyName = "mscorlib";
 
         private List<string> _assemblyPaths;
@@ -25,74 +25,92 @@ namespace ScriptSharp.Importer {
         private Dictionary<string, AssemblyDefinition> _assemblyMap;
         private AssemblyDefinition _coreAssembly;
 
-        public ICollection<string> Assemblies {
-            get {
+        public ICollection<string> Assemblies
+        {
+            get
+            {
                 return _assemblyPaths;
             }
         }
 
-        public string CoreAssemblyPath {
-            get {
+        public string CoreAssemblyPath
+        {
+            get
+            {
                 return _coreAssemblyPath;
             }
         }
 
-        public AssemblyDefinition CoreAssemblyMetadata {
-            get {
+        public AssemblyDefinition CoreAssemblyMetadata
+        {
+            get
+            {
                 return _coreAssembly;
             }
         }
 
-        public AssemblyDefinition GetMetadata(string assembly) {
+        public AssemblyDefinition GetMetadata(string assembly)
+        {
             return _assemblyMap[assembly];
         }
 
-        public bool LoadReferences(ICollection<string> references, IErrorHandler errorHandler) {
+        public bool LoadReferences(ICollection<string> references, IErrorHandler errorHandler)
+        {
             bool hasLoadErrors = false;
 
             AssemblySet assemblySet = new AssemblySet();
 
-            foreach (string referencePath in references) {
+            foreach (string referencePath in references)
+            {
                 string assemblyFilePath = Path.GetFullPath(referencePath);
-                if (File.Exists(assemblyFilePath) == false) {
+                if (File.Exists(assemblyFilePath) == false)
+                {
                     errorHandler.ReportError("The referenced assembly '" + referencePath + "' could not be located.", String.Empty);
                     hasLoadErrors = true;
                     continue;
                 }
 
                 string referenceName = Path.GetFileNameWithoutExtension(assemblyFilePath);
-                if (assemblySet.IsReferenced(referenceName)) {
+                if (assemblySet.IsReferenced(referenceName))
+                {
                     errorHandler.ReportError("The referenced assembly '" + referencePath + "' is a duplicate reference.", String.Empty);
                     hasLoadErrors = true;
 
                     continue;
                 }
 
-                try {
+                try
+                {
                     AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyFilePath);
-                    if (assembly == null) {
+                    if (assembly == null)
+                    {
                         errorHandler.ReportError("The referenced assembly '" + referencePath + "' could not be loaded as an assembly.", String.Empty);
                         hasLoadErrors = true;
                         continue;
                     }
 
-                    if (referenceName.Equals(CoreAssemblyName, StringComparison.OrdinalIgnoreCase)) {
-                        if (_coreAssemblyPath != null) {
+                    if (referenceName.Equals(CoreAssemblyName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (_coreAssemblyPath != null)
+                        {
                             errorHandler.ReportError("The core runtime assembly, mscorlib.dll must be referenced only once.", String.Empty);
                             hasLoadErrors = true;
 
                             continue;
                         }
-                        else {
+                        else
+                        {
                             _coreAssemblyPath = assemblyFilePath;
                             _coreAssembly = assembly;
                         }
                     }
-                    else {
+                    else
+                    {
                         assemblySet.AddAssembly(assemblyFilePath, referenceName, assembly);
                     }
                 }
-                catch (Exception e) {
+                catch (Exception e)
+                {
                     Debug.Fail(e.ToString());
 
                     errorHandler.ReportError("The referenced assembly '" + referencePath + "' could not be loaded as an assembly.", String.Empty);
@@ -100,19 +118,24 @@ namespace ScriptSharp.Importer {
                 }
             }
 
-            if (_coreAssembly == null) {
+            if (_coreAssembly == null)
+            {
                 errorHandler.ReportError("The 'mscorlib' assembly must be referenced.", String.Empty);
                 hasLoadErrors = true;
             }
-            else {
-                if (VerifyScriptAssembly(_coreAssembly) == false) {
+            else
+            {
+                if (VerifyScriptAssembly(_coreAssembly) == false)
+                {
                     errorHandler.ReportError("The assembly '" + _coreAssemblyPath + "' is not a valid script assembly.", String.Empty);
                     hasLoadErrors = true;
                 }
             }
 
-            foreach (KeyValuePair<string, AssemblyDefinition> assemblyReference in assemblySet.Assemblies) {
-                if (VerifyScriptAssembly(assemblyReference.Value) == false) {
+            foreach (KeyValuePair<string, AssemblyDefinition> assemblyReference in assemblySet.Assemblies)
+            {
+                if (VerifyScriptAssembly(assemblyReference.Value) == false)
+                {
                     errorHandler.ReportError("The assembly '" + assemblyReference.Key + "' is not a valid script assembly.", String.Empty);
                     hasLoadErrors = true;
                 }
@@ -124,9 +147,12 @@ namespace ScriptSharp.Importer {
             return hasLoadErrors;
         }
 
-        private bool VerifyScriptAssembly(AssemblyDefinition assembly) {
-            foreach (CustomAttribute attribute in assembly.CustomAttributes) {
-                if (String.CompareOrdinal(attribute.Constructor.DeclaringType.FullName, "System.ScriptAssemblyAttribute") == 0) {
+        private bool VerifyScriptAssembly(AssemblyDefinition assembly)
+        {
+            foreach (CustomAttribute attribute in assembly.CustomAttributes)
+            {
+                if (String.CompareOrdinal(attribute.Constructor.DeclaringType.FullName, "System.ScriptAssemblyAttribute") == 0)
+                {
                     return true;
                 }
             }
@@ -135,28 +161,34 @@ namespace ScriptSharp.Importer {
         }
 
 
-        private sealed class AssemblySet {
+        private sealed class AssemblySet
+        {
 
             private Dictionary<string, AssemblyDefinition> _assemblies;
             private HashSet<string> _assemblyNames;
 
-            public AssemblySet() {
+            public AssemblySet()
+            {
                 _assemblies = new Dictionary<string, AssemblyDefinition>(StringComparer.Ordinal);
                 _assemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             }
 
-            public Dictionary<string, AssemblyDefinition> Assemblies {
-                get {
+            public Dictionary<string, AssemblyDefinition> Assemblies
+            {
+                get
+                {
                     return _assemblies;
                 }
             }
 
-            public void AddAssembly(string path, string referenceName, AssemblyDefinition assembly) {
+            public void AddAssembly(string path, string referenceName, AssemblyDefinition assembly)
+            {
                 _assemblies[path] = assembly;
                 _assemblyNames.Add(referenceName);
             }
 
-            public List<string> GetAssemblyPaths() {
+            public List<string> GetAssemblyPaths()
+            {
                 // Perform a topological sort to get the list of assemblies in order
                 // to cause loading of dependencies to happen before an assembly
                 // that references them.
@@ -165,7 +197,8 @@ namespace ScriptSharp.Importer {
                 Dictionary<string, AssemblyReference> referenceMap =
                     new Dictionary<string, AssemblyReference>(StringComparer.Ordinal);
 
-                foreach (KeyValuePair<string, AssemblyDefinition> assembly in _assemblies) {
+                foreach (KeyValuePair<string, AssemblyDefinition> assembly in _assemblies)
+                {
                     AssemblyReference reference = new AssemblyReference(assembly.Key, assembly.Value);
                     references.Add(reference);
                     referenceMap[reference.FullName] = reference;
@@ -177,19 +210,24 @@ namespace ScriptSharp.Importer {
                 return sortedReferences.Select(r => r.Path).ToList();
             }
 
-            public bool IsReferenced(string referenceName) {
+            public bool IsReferenced(string referenceName)
+            {
                 return _assemblyNames.Contains(referenceName);
             }
 
-            private void VisitReference(AssemblyReference reference, Dictionary<string, AssemblyReference> referenceMap, List<AssemblyReference> referenceList) {
-                if (reference.Visited) {
+            private void VisitReference(AssemblyReference reference, Dictionary<string, AssemblyReference> referenceMap, List<AssemblyReference> referenceList)
+            {
+                if (reference.Visited)
+                {
                     return;
                 }
 
                 reference.Visit();
-                foreach (string dependencyName in reference.Dependencies) {
+                foreach (string dependencyName in reference.Dependencies)
+                {
                     AssemblyReference dependencyReference;
-                    if (referenceMap.TryGetValue(dependencyName, out dependencyReference)) {
+                    if (referenceMap.TryGetValue(dependencyName, out dependencyReference))
+                    {
                         VisitReference(dependencyReference, referenceMap, referenceList);
                     }
                 }
@@ -198,7 +236,8 @@ namespace ScriptSharp.Importer {
             }
         }
 
-        private sealed class AssemblyReference {
+        private sealed class AssemblyReference
+        {
 
             private string _path;
             private List<string> _dependencies;
@@ -206,38 +245,48 @@ namespace ScriptSharp.Importer {
 
             private bool _visited;
 
-            public AssemblyReference(string path, AssemblyDefinition assembly) {
+            public AssemblyReference(string path, AssemblyDefinition assembly)
+            {
                 _path = path;
                 _assembly = assembly;
 
                 _dependencies = assembly.MainModule.AssemblyReferences.Select(a => a.FullName).ToList();
             }
 
-            public string FullName {
-                get {
+            public string FullName
+            {
+                get
+                {
                     return _assembly.FullName;
                 }
             }
 
-            public string Path {
-                get {
+            public string Path
+            {
+                get
+                {
                     return _path;
                 }
             }
 
-            public IEnumerable<string> Dependencies {
-                get {
+            public IEnumerable<string> Dependencies
+            {
+                get
+                {
                     return _dependencies;
                 }
             }
 
-            public bool Visited {
-                get {
+            public bool Visited
+            {
+                get
+                {
                     return _visited;
                 }
             }
 
-            public void Visit() {
+            public void Visit()
+            {
                 _visited = true;
             }
         }

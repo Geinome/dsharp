@@ -10,24 +10,29 @@ using System.Diagnostics;
 using ScriptSharp;
 using ScriptSharp.CodeModel;
 
-namespace ScriptSharp.Validator {
+namespace ScriptSharp.Validator
+{
 
     /// <summary>
     /// Validates the code model based on the constrained subset of C# supposed
     /// in Script#.
     /// </summary>
-    internal sealed class CodeModelValidator : IParseNodeHandler {
+    internal sealed class CodeModelValidator : IParseNodeHandler
+    {
 
         private IErrorHandler _errorHandler;
         private Dictionary<Type, IParseNodeValidator> _validatorTable;
 
-        public CodeModelValidator(IErrorHandler errorHandler) {
+        public CodeModelValidator(IErrorHandler errorHandler)
+        {
             _errorHandler = errorHandler;
             _validatorTable = new Dictionary<Type, IParseNodeValidator>();
         }
 
-        private Type GetValidatorType(ParseNodeType nodeType, CompilerOptions options) {
-            switch (nodeType) {
+        private Type GetValidatorType(ParseNodeType nodeType, CompilerOptions options)
+        {
+            switch (nodeType)
+            {
                 case ParseNodeType.CompilationUnit:
                     return typeof(CompilationUnitNodeValidator);
                 case ParseNodeType.Namespace:
@@ -133,26 +138,29 @@ namespace ScriptSharp.Validator {
         }
 
         #region IParseNodeHandler Members
-        bool IParseNodeHandler.RequiresChildrenGrouping {
-            get {
-                return false;
-            }
+        bool IParseNodeHandler.RequiresChildrenGrouping
+        {
+            get { return false; }
         }
 
-        bool IParseNodeHandler.HandleNode(ParseNode node, object context) {
+        bool IParseNodeHandler.HandleNode(ParseNode node, object context)
+        {
             CompilerOptions options = (CompilerOptions)context;
 
             Type validatorType = GetValidatorType(node.NodeType, options);
-            if (validatorType == null) {
+            if (validatorType == null)
+            {
                 // valid; continue with children...
                 return true;
             }
 
             IParseNodeValidator validator = null;
-            if (_validatorTable.ContainsKey(validatorType)) {
+            if (_validatorTable.ContainsKey(validatorType))
+            {
                 validator = _validatorTable[validatorType];
             }
-            else {
+            else
+            {
                 validator = (IParseNodeValidator)Activator.CreateInstance(validatorType);
                 _validatorTable[validatorType] = validator;
             }
@@ -160,10 +168,12 @@ namespace ScriptSharp.Validator {
             return validator.Validate(node, options, _errorHandler);
         }
 
-        void IParseNodeHandler.StartChildren(string identifier) {
+        void IParseNodeHandler.StartChildren(string identifier)
+        {
         }
 
-        void IParseNodeHandler.EndChildren() {
+        void IParseNodeHandler.EndChildren()
+        {
         }
         #endregion
     }

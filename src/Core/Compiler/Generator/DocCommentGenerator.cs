@@ -10,14 +10,16 @@ using System.Text;
 using System.Xml;
 using ScriptSharp.ScriptModel;
 
-namespace ScriptSharp.Generator {
-
-    internal static class DocCommentGenerator {
-
-        public static void GenerateComment(ScriptGenerator generator, Symbol symbol) {
+namespace ScriptSharp.Generator
+{
+    internal static class DocCommentGenerator
+    {
+        public static void GenerateComment(ScriptGenerator generator, Symbol symbol)
+        {
             ScriptTextWriter writer = generator.Writer;
 
-            switch (symbol.Type) {
+            switch (symbol.Type)
+            {
                 case SymbolType.Class:
                     GenerateClassComment(writer, (ClassSymbol)symbol);
                     break;
@@ -45,44 +47,54 @@ namespace ScriptSharp.Generator {
             }
         }
 
-        private static void GenerateClassComment(ScriptTextWriter writer, ClassSymbol classSymbol) {
+        private static void GenerateClassComment(ScriptTextWriter writer, ClassSymbol classSymbol)
+        {
             GenerateSummaryComment(writer, classSymbol);
 
             if ((classSymbol.Constructor != null) &&
-                (classSymbol.Constructor.Parameters != null)) {
-                foreach (ParameterSymbol parameterSymbol in classSymbol.Constructor.Parameters) {
+                (classSymbol.Constructor.Parameters != null))
+            {
+                foreach (ParameterSymbol parameterSymbol in classSymbol.Constructor.Parameters)
+                {
                     GenerateParameterComment(writer, parameterSymbol);
                 }
             }
 
-            foreach (MemberSymbol memberSymbol in classSymbol.Members) {
+            foreach (MemberSymbol memberSymbol in classSymbol.Members)
+            {
                 FieldSymbol fieldSymbol = memberSymbol as FieldSymbol;
-                if (fieldSymbol != null) {
+                if (fieldSymbol != null)
+                {
                     GenerateFieldComment(writer, fieldSymbol);
                 }
             }
         }
 
-        private static void GenerateFormattedComment(ScriptTextWriter writer, string text) {
-            foreach (string line in text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
+        private static void GenerateFormattedComment(ScriptTextWriter writer, string text)
+        {
+            foreach (string line in text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+            {
                 string trimmedLine = line.Trim();
 
-                if (!String.IsNullOrEmpty(trimmedLine)) {
+                if (!String.IsNullOrEmpty(trimmedLine))
+                {
                     writer.WriteLine("/// {0}", trimmedLine);
                 }
             }
         }
 
-        private static void GenerateInterfaceComment(ScriptTextWriter writer, InterfaceSymbol interfaceSymbol) {
+        private static void GenerateInterfaceComment(ScriptTextWriter writer, InterfaceSymbol interfaceSymbol)
+        {
             writer.WriteLine();
-            writer.Indent++;
+            writer.IncrementIndent();
 
             GenerateSummaryComment(writer, interfaceSymbol);
 
-            writer.Indent--;
+            writer.DecrementIndent();
         }
 
-        private static void GenerateParameterComment(ScriptTextWriter writer, ParameterSymbol parameterSymbol) {
+        private static void GenerateParameterComment(ScriptTextWriter writer, ParameterSymbol parameterSymbol)
+        {
             writer.Write("/// <param name=\"{0}\"", parameterSymbol.GeneratedName);
 
             GenerateTypeAttributes(writer, parameterSymbol.ValueType);
@@ -94,18 +106,21 @@ namespace ScriptSharp.Generator {
             writer.WriteLine("/// </param>");
         }
 
-        private static void GenerateEventComment(ScriptTextWriter writer, EventSymbol eventSymbol) {
+        private static void GenerateEventComment(ScriptTextWriter writer, EventSymbol eventSymbol)
+        {
             GenerateSummaryComment(writer, eventSymbol);
 
             writer.WriteLine("/// <param name=\"{0}\" type=\"Function\" />", eventSymbol.Parameters[0].Name);
         }
 
-        private static void GenerateFieldComment(ScriptTextWriter writer, FieldSymbol fieldSymbol) {
+        private static void GenerateFieldComment(ScriptTextWriter writer, FieldSymbol fieldSymbol)
+        {
             writer.Write("/// <field name=\"{0}\"", fieldSymbol.GeneratedName);
 
             GenerateTypeAttributes(writer, fieldSymbol.AssociatedType);
 
-            if ((fieldSymbol.Visibility & MemberVisibility.Static) != 0) {
+            if ((fieldSymbol.Visibility & MemberVisibility.Static) != 0)
+            {
                 writer.Write(" static=\"true\"");
             }
 
@@ -116,11 +131,14 @@ namespace ScriptSharp.Generator {
             writer.WriteLine("/// </field>");
         }
 
-        private static void GenerateIndexerComment(ScriptTextWriter writer, IndexerSymbol indexerSymbol) {
+        private static void GenerateIndexerComment(ScriptTextWriter writer, IndexerSymbol indexerSymbol)
+        {
             GenerateSummaryComment(writer, indexerSymbol);
 
-            if (indexerSymbol.Parameters != null) {
-                foreach (ParameterSymbol parameterSymbol in indexerSymbol.Parameters) {
+            if (indexerSymbol.Parameters != null)
+            {
+                foreach (ParameterSymbol parameterSymbol in indexerSymbol.Parameters)
+                {
                     GenerateParameterComment(writer, parameterSymbol);
                 }
             }
@@ -128,11 +146,14 @@ namespace ScriptSharp.Generator {
             GenerateReturnsComment(writer, indexerSymbol.AssociatedType);
         }
 
-        private static void GenerateMethodComment(ScriptTextWriter writer, MethodSymbol methodSymbol) {
+        private static void GenerateMethodComment(ScriptTextWriter writer, MethodSymbol methodSymbol)
+        {
             GenerateSummaryComment(writer, methodSymbol);
 
-            if (methodSymbol.Parameters != null) {
-                foreach (ParameterSymbol parameterSymbol in methodSymbol.Parameters) {
+            if (methodSymbol.Parameters != null)
+            {
+                foreach (ParameterSymbol parameterSymbol in methodSymbol.Parameters)
+                {
                     GenerateParameterComment(writer, parameterSymbol);
                 }
             }
@@ -140,7 +161,8 @@ namespace ScriptSharp.Generator {
             GenerateReturnsComment(writer, methodSymbol.AssociatedType);
         }
 
-        private static void GeneratePropertyComment(ScriptTextWriter writer, PropertySymbol propertySymbol) {
+        private static void GeneratePropertyComment(ScriptTextWriter writer, PropertySymbol propertySymbol)
+        {
             GenerateSummaryComment(writer, propertySymbol);
 
             writer.Write("/// <value");
@@ -150,8 +172,10 @@ namespace ScriptSharp.Generator {
             writer.WriteLine("></value>");
         }
 
-        private static void GenerateReturnsComment(ScriptTextWriter writer, TypeSymbol typeSymbol) {
-            if (IsVoid(typeSymbol)) {
+        private static void GenerateReturnsComment(ScriptTextWriter writer, TypeSymbol typeSymbol)
+        {
+            if (IsVoid(typeSymbol))
+            {
                 return;
             }
 
@@ -162,55 +186,68 @@ namespace ScriptSharp.Generator {
             writer.WriteLine("></returns>");
         }
 
-        private static void GenerateSummaryComment(ScriptTextWriter writer, Symbol symbol) {
+        private static void GenerateSummaryComment(ScriptTextWriter writer, Symbol symbol)
+        {
             string documentation = symbol.Documentation;
 
-            if (String.IsNullOrEmpty(documentation) == false) {
+            if (String.IsNullOrEmpty(documentation) == false)
+            {
                 writer.WriteLine("/// <summary>");
                 GenerateFormattedComment(writer, documentation);
                 writer.WriteLine("/// </summary>");
             }
         }
 
-        private static void GenerateTypeAttributes(ScriptTextWriter writer, TypeSymbol typeSymbol) {
-            if (IsDomElement(typeSymbol)) {
+        private static void GenerateTypeAttributes(ScriptTextWriter writer, TypeSymbol typeSymbol)
+        {
+            if (IsDomElement(typeSymbol))
+            {
                 writer.Write(" type=\"Object\" domElement=\"true\"");
             }
-            else {
+            else
+            {
                 writer.Write(" type=\"{0}\"", typeSymbol.FullGeneratedName);
             }
 
-            if (IsInteger(typeSymbol)) {
+            if (IsInteger(typeSymbol))
+            {
                 writer.Write(" integer=\"true\"");
             }
 
-            if (typeSymbol.IsArray) {
+            if (typeSymbol.IsArray)
+            {
                 ClassSymbol classSymbol = (ClassSymbol)typeSymbol;
 
                 TypeSymbol elementTypeSymbol = classSymbol.Indexer.AssociatedType;
 
-                if (IsDomElement(elementTypeSymbol)) {
+                if (IsDomElement(elementTypeSymbol))
+                {
                     writer.Write(" elementType=\"Object\" elementDomElement=\"true\"");
                 }
-                else {
+                else
+                {
                     writer.Write(" elementType=\"{0}\"", elementTypeSymbol.GeneratedName);
                 }
 
-                if (IsInteger(elementTypeSymbol)) {
+                if (IsInteger(elementTypeSymbol))
+                {
                     writer.Write(" elementInteger=\"true\"");
                 }
             }
         }
 
-        private static bool IsDomElement(TypeSymbol typeSymbol) {
+        private static bool IsDomElement(TypeSymbol typeSymbol)
+        {
             ClassSymbol classSymbol = typeSymbol as ClassSymbol;
 
-            while (classSymbol != null) {
+            while (classSymbol != null)
+            {
                 // TODO: This is a dependency on Script.Web.dll that we should remove.
                 //       For now, changed SymbolSet.FindSymbol to handle the case
                 //       where a namespace being looked up might not be defined.
 
-                if (IsSymbol(classSymbol, "System.Html.Element")) {
+                if (IsSymbol(classSymbol, "System.Html.Element"))
+                {
                     return true;
                 }
 
@@ -220,7 +257,8 @@ namespace ScriptSharp.Generator {
             return false;
         }
 
-        private static bool IsInteger(TypeSymbol typeSymbol) {
+        private static bool IsInteger(TypeSymbol typeSymbol)
+        {
             return (IsSymbol(typeSymbol, "System.Byte") ||
                 IsSymbol(typeSymbol, "System.Int16") ||
                 IsSymbol(typeSymbol, "System.Int32") ||
@@ -231,11 +269,13 @@ namespace ScriptSharp.Generator {
                 IsSymbol(typeSymbol, "System.UInt64"));
         }
 
-        private static bool IsSymbol(TypeSymbol typeSymbol, string name) {
+        private static bool IsSymbol(TypeSymbol typeSymbol, string name)
+        {
             return typeSymbol.SymbolSet.IsSymbol(typeSymbol, name);
         }
 
-        private static bool IsVoid(TypeSymbol typeSymbol) {
+        private static bool IsVoid(TypeSymbol typeSymbol)
+        {
             return IsSymbol(typeSymbol, "System.Void");
         }
     }

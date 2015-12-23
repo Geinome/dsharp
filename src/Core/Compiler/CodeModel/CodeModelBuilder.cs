@@ -11,39 +11,47 @@ using System.IO;
 using ScriptSharp;
 using ScriptSharp.Parser;
 
-namespace ScriptSharp.CodeModel {
+namespace ScriptSharp.CodeModel
+{
 
-    internal sealed class CodeModelBuilder {
+    internal sealed class CodeModelBuilder
+    {
 
-        private CompilerOptions _options;
-        private IErrorHandler _errorHandler;
+        private CompilerOptions options;
+        private IErrorHandler errorHandler;
 
         private bool _hasErrors;
 
-        public CodeModelBuilder(CompilerOptions options, IErrorHandler errorHandler) {
-            _options = options;
-            _errorHandler = errorHandler;
+        public CodeModelBuilder(CompilerOptions options, IErrorHandler errorHandler)
+        {
+            this.options = options;
+            this.errorHandler = errorHandler;
         }
 
-        public CompilationUnitNode BuildCodeModel(IStreamSource source) {
+        public CompilationUnitNode BuildCodeModel(IStreamSource source)
+        {
             _hasErrors = false;
 
             string filePath = source.FullName;
 #if DEBUG
-            if (_options.InternalTestMode) {
+            if (options.InternalTestMode)
+            {
                 // This ensures in file paths are just file names in test output.
                 filePath = Path.GetFileName(filePath);
             }
 #endif // DEBUG
             char[] buffer = GetBuffer(source);
-            if (buffer == null) {
-                _errorHandler.ReportError("Unable to read from file " + filePath, filePath);
+            if (buffer == null)
+            {
+                errorHandler.ReportError("Unable to read from file " + filePath, filePath);
                 return null;
             }
 
             IDictionary definesTable = new Hashtable();
-            if ((_options.Defines != null) && (_options.Defines.Count != 0)) {
-                foreach (string s in _options.Defines) {
+            if ((options.Defines != null) && (options.Defines.Count != 0))
+            {
+                foreach (string s in options.Defines)
+                {
                     definesTable[s] = null;
                 }
             }
@@ -55,19 +63,23 @@ namespace ScriptSharp.CodeModel {
             lexer.OnError += new FileErrorEventHandler(OnError);
             Token[] tokens = lexer.Lex(buffer, definesTable, lineMap, /* includeComments */ false);
 
-            if (_hasErrors == false) {
+            if (_hasErrors == false)
+            {
                 FileParser parser = new FileParser(nameTable, filePath);
                 parser.OnError += new FileErrorEventHandler(OnError);
 
                 CompilationUnitNode compilationUnit = parser.Parse(tokens, lineMap);
-                foreach (ParseNode node in compilationUnit.Members) {
+                foreach (ParseNode node in compilationUnit.Members)
+                {
                     NamespaceNode namespaceNode = node as NamespaceNode;
-                    if (namespaceNode != null) {
+                    if (namespaceNode != null)
+                    {
                         namespaceNode.IncludeCompilationUnitUsingClauses();
                     }
                 }
 
-                if (_hasErrors == false) {
+                if (_hasErrors == false)
+                {
                     return compilationUnit;
                 }
             }
@@ -75,11 +87,13 @@ namespace ScriptSharp.CodeModel {
             return null;
         }
 
-        private char[] GetBuffer(IStreamSource source) {
+        private char[] GetBuffer(IStreamSource source)
+        {
             char[] buffer = null;
 
             Stream stream = source.GetStream();
-            if (stream != null) {
+            if (stream != null)
+            {
                 StreamReader reader = new StreamReader(stream);
                 string text = reader.ReadToEnd();
 
@@ -89,13 +103,14 @@ namespace ScriptSharp.CodeModel {
             return buffer;
         }
 
-        private void OnError(object sender, FileErrorEventArgs e) {
+        private void OnError(object sender, FileErrorEventArgs e)
+        {
             _hasErrors = true;
 
             string location = e.Position.ToString();
             string message = String.Format(e.Error.Message, e.Args);
 
-            _errorHandler.ReportError(message, location);
+            errorHandler.ReportError(message, location);
         }
     }
 }

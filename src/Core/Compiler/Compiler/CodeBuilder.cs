@@ -12,44 +12,53 @@ using ScriptSharp;
 using ScriptSharp.CodeModel;
 using ScriptSharp.ScriptModel;
 
-namespace ScriptSharp.Compiler {
-
-    internal sealed class CodeBuilder {
-
-        private CompilerOptions _options;
-        private IErrorHandler _errorHandler;
+namespace ScriptSharp.Compiler
+{
+    internal sealed class CodeBuilder
+    {
+        private CompilerOptions compilerOptions;
+        private IErrorHandler errorHandler;
 
         private List<SymbolImplementation> _implementations;
 
-        public CodeBuilder(CompilerOptions options, IErrorHandler errorHandler) {
-            _options = options;
-            _errorHandler = errorHandler;
+        public CodeBuilder(CompilerOptions options, IErrorHandler errorHandler)
+        {
+            compilerOptions = options;
+            this.errorHandler = errorHandler;
         }
 
-        public ICollection<SymbolImplementation> BuildCode(SymbolSet symbols) {
+        public ICollection<SymbolImplementation> BuildCode(SymbolSet symbols)
+        {
             _implementations = new List<SymbolImplementation>();
 
-            foreach (NamespaceSymbol namespaceSymbol in symbols.Namespaces) {
-                if (namespaceSymbol.HasApplicationTypes == false) {
+            foreach (NamespaceSymbol namespaceSymbol in symbols.Namespaces)
+            {
+                if (namespaceSymbol.HasApplicationTypes == false)
+                {
                     continue;
                 }
 
-                foreach (TypeSymbol type in namespaceSymbol.Types) {
-                    if (type.IsApplicationType == false) {
+                foreach (TypeSymbol type in namespaceSymbol.Types)
+                {
+                    if (type.IsApplicationType == false)
+                    {
                         continue;
                     }
 
-                    if (type.IsTestType && !_options.IncludeTests) {
+                    if (type.IsTestType && !compilerOptions.IncludeTests)
+                    {
                         // Ignore test types, if tests are not to be compiled
                         continue;
                     }
 
-                    switch (type.Type) {
+                    switch (type.Type)
+                    {
                         case SymbolType.Class:
                             BuildCode((ClassSymbol)type);
                             break;
                         case SymbolType.Record:
-                            if (((RecordSymbol)type).Constructor != null) {
+                            if (((RecordSymbol)type).Constructor != null)
+                            {
                                 BuildCode(((RecordSymbol)type).Constructor);
                             }
                             break;
@@ -60,21 +69,27 @@ namespace ScriptSharp.Compiler {
             return _implementations;
         }
 
-        private void BuildCode(ClassSymbol classSymbol) {
-            if (classSymbol.Constructor != null) {
+        private void BuildCode(ClassSymbol classSymbol)
+        {
+            if (classSymbol.Constructor != null)
+            {
                 BuildCode(classSymbol.Constructor);
             }
 
-            if (classSymbol.StaticConstructor != null) {
+            if (classSymbol.StaticConstructor != null)
+            {
                 BuildCode(classSymbol.StaticConstructor);
             }
 
-            if (classSymbol.Indexer != null) {
+            if (classSymbol.Indexer != null)
+            {
                 BuildCode(classSymbol.Indexer);
             }
 
-            foreach (MemberSymbol memberSymbol in classSymbol.Members) {
-                switch (memberSymbol.Type) {
+            foreach (MemberSymbol memberSymbol in classSymbol.Members)
+            {
+                switch (memberSymbol.Type)
+                {
                     case SymbolType.Event:
                         BuildCode((EventSymbol)memberSymbol);
                         break;
@@ -91,12 +106,14 @@ namespace ScriptSharp.Compiler {
             }
         }
 
-        private void BuildCode(EventSymbol eventSymbol) {
-            if (eventSymbol.IsAbstract || eventSymbol.DefaultImplementation) {
+        private void BuildCode(EventSymbol eventSymbol)
+        {
+            if (eventSymbol.IsAbstract || eventSymbol.DefaultImplementation)
+            {
                 return;
             }
 
-            ImplementationBuilder implBuilder = new ImplementationBuilder(_options, _errorHandler);
+            ImplementationBuilder implBuilder = new ImplementationBuilder(compilerOptions, errorHandler);
 
             eventSymbol.AddImplementation(implBuilder.BuildEventAdd(eventSymbol), /* adder */ true);
             eventSymbol.AddImplementation(implBuilder.BuildEventRemove(eventSymbol), /* adder */ false);
@@ -104,8 +121,10 @@ namespace ScriptSharp.Compiler {
             _implementations.Add(eventSymbol.AdderImplementation);
             _implementations.Add(eventSymbol.RemoverImplementation);
 
-            if (eventSymbol.AnonymousMethods != null) {
-                foreach (AnonymousMethodSymbol anonymousMethod in eventSymbol.AnonymousMethods) {
+            if (eventSymbol.AnonymousMethods != null)
+            {
+                foreach (AnonymousMethodSymbol anonymousMethod in eventSymbol.AnonymousMethods)
+                {
                     Debug.Assert(anonymousMethod.Implementation != null);
 
                     _implementations.Add(anonymousMethod.Implementation);
@@ -113,33 +132,40 @@ namespace ScriptSharp.Compiler {
             }
         }
 
-        private void BuildCode(FieldSymbol fieldSymbol) {
-            ImplementationBuilder implBuilder = new ImplementationBuilder(_options, _errorHandler);
+        private void BuildCode(FieldSymbol fieldSymbol)
+        {
+            ImplementationBuilder implBuilder = new ImplementationBuilder(compilerOptions, errorHandler);
             SymbolImplementation implementation = implBuilder.BuildField(fieldSymbol);
 
-            if (implementation != null) {
+            if (implementation != null)
+            {
                 fieldSymbol.AddImplementation(implementation);
                 _implementations.Add(fieldSymbol.Implementation);
             }
         }
 
-        private void BuildCode(IndexerSymbol indexerSymbol) {
-            if (indexerSymbol.IsAbstract) {
+        private void BuildCode(IndexerSymbol indexerSymbol)
+        {
+            if (indexerSymbol.IsAbstract)
+            {
                 return;
             }
 
-            ImplementationBuilder implBuilder = new ImplementationBuilder(_options, _errorHandler);
+            ImplementationBuilder implBuilder = new ImplementationBuilder(compilerOptions, errorHandler);
 
             indexerSymbol.AddImplementation(implBuilder.BuildIndexerGetter(indexerSymbol), /* getter */ true);
             _implementations.Add(indexerSymbol.GetterImplementation);
 
-            if (indexerSymbol.IsReadOnly == false) {
+            if (indexerSymbol.IsReadOnly == false)
+            {
                 indexerSymbol.AddImplementation(implBuilder.BuildPropertySetter(indexerSymbol), /* getter */ false);
                 _implementations.Add(indexerSymbol.SetterImplementation);
             }
 
-            if (indexerSymbol.AnonymousMethods != null) {
-                foreach (AnonymousMethodSymbol anonymousMethod in indexerSymbol.AnonymousMethods) {
+            if (indexerSymbol.AnonymousMethods != null)
+            {
+                foreach (AnonymousMethodSymbol anonymousMethod in indexerSymbol.AnonymousMethods)
+                {
                     Debug.Assert(anonymousMethod.Implementation != null);
 
                     _implementations.Add(anonymousMethod.Implementation);
@@ -147,18 +173,22 @@ namespace ScriptSharp.Compiler {
             }
         }
 
-        private void BuildCode(MethodSymbol methodSymbol) {
-            if (methodSymbol.IsAbstract) {
+        private void BuildCode(MethodSymbol methodSymbol)
+        {
+            if (methodSymbol.IsAbstract)
+            {
                 return;
             }
 
-            ImplementationBuilder implBuilder = new ImplementationBuilder(_options, _errorHandler);
+            ImplementationBuilder implBuilder = new ImplementationBuilder(compilerOptions, errorHandler);
             methodSymbol.AddImplementation(implBuilder.BuildMethod(methodSymbol));
 
             _implementations.Add(methodSymbol.Implementation);
 
-            if (methodSymbol.AnonymousMethods != null) {
-                foreach (AnonymousMethodSymbol anonymousMethod in methodSymbol.AnonymousMethods) {
+            if (methodSymbol.AnonymousMethods != null)
+            {
+                foreach (AnonymousMethodSymbol anonymousMethod in methodSymbol.AnonymousMethods)
+                {
                     Debug.Assert(anonymousMethod.Implementation != null);
 
                     _implementations.Add(anonymousMethod.Implementation);
@@ -166,23 +196,28 @@ namespace ScriptSharp.Compiler {
             }
         }
 
-        private void BuildCode(PropertySymbol propertySymbol) {
-            if (propertySymbol.IsAbstract) {
+        private void BuildCode(PropertySymbol propertySymbol)
+        {
+            if (propertySymbol.IsAbstract)
+            {
                 return;
             }
 
-            ImplementationBuilder implBuilder = new ImplementationBuilder(_options, _errorHandler);
-            
+            ImplementationBuilder implBuilder = new ImplementationBuilder(compilerOptions, errorHandler);
+
             propertySymbol.AddImplementation(implBuilder.BuildPropertyGetter(propertySymbol), /* getter */ true);
             _implementations.Add(propertySymbol.GetterImplementation);
 
-            if (propertySymbol.IsReadOnly == false) {
+            if (propertySymbol.IsReadOnly == false)
+            {
                 propertySymbol.AddImplementation(implBuilder.BuildPropertySetter(propertySymbol), /* getter */ false);
                 _implementations.Add(propertySymbol.SetterImplementation);
             }
 
-            if (propertySymbol.AnonymousMethods != null) {
-                foreach (AnonymousMethodSymbol anonymousMethod in propertySymbol.AnonymousMethods) {
+            if (propertySymbol.AnonymousMethods != null)
+            {
+                foreach (AnonymousMethodSymbol anonymousMethod in propertySymbol.AnonymousMethods)
+                {
                     Debug.Assert(anonymousMethod.Implementation != null);
 
                     _implementations.Add(anonymousMethod.Implementation);
